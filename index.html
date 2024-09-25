@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -83,10 +84,11 @@
     const countdown = document.getElementById('countdown');
     let adPlayed = false; // 広告が既に再生されたかどうかを追跡
     let counter = 5; // スキップまでの秒数
+    let countdownInterval;
 
-    // メインビデオが再生された後に広告を再生する
-    mainVideo.addEventListener('play', () => {
-        if (!adPlayed && mainVideo.currentTime >= 30) {  // 30秒後に広告を挿入
+    // メインビデオの途中で広告を再生する
+    mainVideo.addEventListener('timeupdate', () => {
+        if (!adPlayed && mainVideo.currentTime >= 30) {  // 30秒で広告を挿入
             playAd();
         }
     });
@@ -96,31 +98,40 @@
         mainVideo.pause();  // メインビデオを一時停止
         adVideo.style.display = 'block';
         mainVideo.style.display = 'none';
-        
+
+        // 広告の再生を試みる
         adVideo.play().then(() => {
             console.log("広告が再生されました");
-
-            // カウントダウン開始
-            countdown.style.display = 'block';
-            skipBtn.style.display = 'none'; // 初期状態ではスキップボタンを非表示
-
-            const countdownInterval = setInterval(() => {
-                counter--;
-                countdown.textContent = counter;
-                if (counter <= 0) {
-                    skipBtn.style.display = 'block';  // スキップボタンを表示
-                    countdown.style.display = 'none';  // カウントダウンを非表示
-                    clearInterval(countdownInterval);
-                }
-            }, 1000);
-
-            adVideo.addEventListener('ended', () => {
-                resumeMainVideo();
-            });
+            startCountdown(); // 自動再生が成功したらカウントダウンを開始
         }).catch(error => {
             console.log("自動再生できませんでした:", error);
-            // 自動再生が失敗した場合、手動での再生を促すなどの対応を考える
+            // 自動再生ができない場合、ユーザーが手動で再生ボタンを押すのを待つ
+            adVideo.addEventListener('play', () => {
+                console.log("ユーザーが広告を再生しました");
+                startCountdown(); // 手動再生が始まったらカウントダウンを開始
+            });
         });
+
+        adVideo.addEventListener('ended', () => {
+            resumeMainVideo();
+        });
+    }
+
+    function startCountdown() {
+        // カウントダウンを表示して開始
+        countdown.style.display = 'block';
+        skipBtn.style.display = 'none';
+        counter = 5; // カウンターをリセット
+
+        countdownInterval = setInterval(() => {
+            counter--;
+            countdown.textContent = counter;
+            if (counter <= 0) {
+                clearInterval(countdownInterval);
+                skipBtn.style.display = 'block';  // スキップボタンを表示
+                countdown.style.display = 'none';  // カウントダウンを非表示
+            }
+        }, 1000);
     }
 
     function skipAd() {
@@ -130,6 +141,7 @@
     }
 
     function resumeMainVideo() {
+        clearInterval(countdownInterval); // カウントダウンの停止
         adVideo.style.display = 'none';
         mainVideo.style.display = 'block';
         mainVideo.play();
