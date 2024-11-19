@@ -3,14 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Embedding</title>
+    <title>Fullscreen Vertical Video</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #000;
+        }
+        #videoContainer {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        #videoContainer video {
+            width: 90%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        #openVideoButton {
+            color: white;
+            font-size: 18px;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
+    <!-- ポップアップを開くボタン -->
+    <button id="openVideoButton">動画を見る</button>
+
+    <!-- 動画ポップアップ -->
     <div id="videoContainer">
-        <video id="mainVideo" playsinline controls>
+        <video id="mainVideo" controls>
             <source src="VIvideo1.MP4" type="video/mp4">
             Your browser does not support the video tag.
         </video>
     </div>
+
+    <script>
+        const openVideoButton = document.getElementById('openVideoButton');
+        const videoContainer = document.getElementById('videoContainer');
+        const mainVideo = document.getElementById('mainVideo');
+
+        // ポップアップを表示する
+        openVideoButton.addEventListener('click', () => {
+            videoContainer.style.display = 'flex';
+            mainVideo.play();
+            mainVideo.requestFullscreen(); // 全画面モードにする
+        });
+
+        // 動画が終わったらポップアップを閉じる
+        mainVideo.addEventListener('ended', () => {
+            videoContainer.style.display = 'none';
+            document.exitFullscreen();
+        });
+
+        // ポップアップをタップして閉じる機能
+        videoContainer.addEventListener('click', (event) => {
+            if (event.target === videoContainer) {
+                videoContainer.style.display = 'none';
+                mainVideo.pause();
+                document.exitFullscreen();
+            }
+        });
+    </script>
 </body>
 </html>
